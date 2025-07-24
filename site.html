@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI ASSISTANT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", Arial, sans-serif;
+        background-color: #121212;
+        background-image: radial-gradient(
+          rgba(57, 255, 20, 0.07) 1px,
+          transparent 1px
+        );
+        background-size: 20px 20px;
+        color: #e0e0e0;
+        margin: 0;
+        padding: 0;
+        text-align: center;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+      }
+
+      /* --- СТИЛИ ДЛЯ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ --- */
+      .lang-switcher {
+        background-color: #000;
+        padding: 8px 15px;
+        text-align: right;
+      }
+      .lang-btn {
+        background: none;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        margin: 0 5px;
+        padding: 5px;
+        transition: color 0.3s ease;
+      }
+      .lang-btn:hover {
+        color: #fff;
+      }
+      .lang-btn.active {
+        color: #39ff14;
+      }
+
+      .main-header {
+        padding: 40px 0;
+      }
+      .main-headline {
+        font-family: "Roboto Mono", monospace;
+        color: #39ff14;
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 0 0 10px rgba(57, 255, 20, 0.7);
+      }
+      .sub-headline {
+        font-size: 18px;
+        margin: 10px auto 0 auto;
+        max-width: 600px;
+        color: #b0b0b0;
+        line-height: 1.5;
+      }
+      @media (min-width: 768px) {
+        .main-headline {
+          font-size: 48px;
+        }
+        .sub-headline {
+          font-size: 20px;
+        }
+      }
+
+      h2 {
+        font-family: "Roboto Mono", monospace;
+        font-size: 32px;
+        font-weight: 700;
+        margin-top: 30px;
+        color: #39ff14;
+        text-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
+      }
+      p {
+        font-size: 18px;
+        margin: 10px 20px;
+      }
+
+      .button {
+        display: inline-block;
+        margin: 20px auto;
+        padding: 15px 25px;
+        background-color: #00c853;
+        color: white;
+        font-weight: bold;
+        border-radius: 10px;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(57, 255, 20, 0.5);
+        box-shadow: 0 0 5px rgba(0, 200, 83, 0.5),
+          0 0 10px rgba(0, 200, 83, 0.3);
+        transition: all 0.3s ease;
+      }
+      .button:hover {
+        background-color: #00df5e;
+        box-shadow: 0 0 10px rgba(57, 255, 20, 0.8),
+          0 0 20px rgba(57, 255, 20, 0.6);
+        transform: translateY(-2px);
+      }
+      .button::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 75%;
+        height: 100%;
+        background: linear-gradient(
+          120deg,
+          transparent,
+          rgba(255, 255, 255, 0.4),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+      .button:hover::before {
+        left: 125%;
+      }
+
+      .slider-wrapper {
+        position: relative;
+        width: 90%;
+        margin: 30px auto;
+        max-width: 960px;
+      }
+
+      .slider-wrapper::after {
+        content: "";
+        position: absolute;
+        bottom: -15px;
+        left: 15%;
+        width: 70%;
+        height: 60px;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(57, 255, 20, 0.25),
+          transparent 70%
+        );
+        filter: blur(30px);
+        z-index: -1;
+      }
+
+      .slider-viewport {
+        overflow: hidden;
+        cursor: grab;
+      }
+      .slider-viewport.is-swiping {
+        cursor: grabbing;
+      }
+
+      .slider-track {
+        display: flex;
+        gap: 1%;
+      }
+
+      .slider-slide {
+        flex-shrink: 0;
+        box-sizing: border-box;
+        aspect-ratio: 10 / 16;
+      }
+      .slider-slide:not(.active-slide) {
+        transform: scale(0.9);
+        opacity: 0.6;
+      }
+
+      .slider-slide img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 15px;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .slider-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: rgba(45, 45, 45, 0.7);
+        border: none;
+        color: #39ff14;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 24px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .slider-btn:hover {
+        background-color: rgba(64, 64, 64, 0.9);
+      }
+      @media (max-width: 1023px) {
+        .slider-btn {
+          display: none;
+        }
+      }
+      .slider-btn-prev {
+        left: -22px;
+      }
+      .slider-btn-next {
+        right: -22px;
+      }
+
+      .lightbox {
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.4s ease, visibility 0s linear 0.4s;
+      }
+      .lightbox.active {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.4s ease;
+      }
+      .lightbox-content {
+        max-width: 80vw;
+        max-height: 80vh;
+        transition: transform 0.4s ease;
+        transform: scale(0.95);
+        cursor: zoom-in;
+      }
+      .lightbox.active .lightbox-content {
+        transform: scale(1);
+      }
+      .lightbox-content.is-zoomed {
+        cursor: grab;
+      }
+      .lightbox-content.is-dragging {
+        cursor: grabbing;
+      }
+      .lightbox-content.is-zoomed:not(.is-dragging) {
+        cursor: zoom-out;
+      }
+      .close-lightbox {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+        padding: 10px;
+        line-height: 0.5;
+      }
+      .close-lightbox:hover {
+        color: #bbb;
+      }
+
+      .shorts-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        max-width: 650px;
+        margin: 20px auto;
+      }
+
+      .short-item {
+        width: 100%;
+        aspect-ratio: 9 / 16;
+      }
+
+      .short-item iframe {
+        width: 100%;
+        height: 100%;
+        border-radius: 15px;
+        border: 1px solid rgba(57, 255, 20, 0.2);
+      }
+
+      @media (max-width: 767px) {
+        .shorts-grid {
+          grid-template-columns: 1fr;
+          max-width: 320px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="lang-switcher">
+      <button class="lang-btn" data-lang="my">MY</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+
+    <header class="main-header">
+      <div class="container">
+        <h1 class="main-headline" data-key="header-title"></h1>
+        <p class="sub-headline" data-key="header-subtitle"></p>
+      </div>
+    </header>
+
+    <div class="container">
+      <a
+        href="https://t.me/Idris_Hacker_bot"
+        class="button"
+        data-key="btn-join"
+      ></a>
+    </div>
+
+    <div class="slider-wrapper">
+      <div class="slider-viewport">
+        <div class="slider-track">
+          <div class="slider-slide">
+            <img src="https://iili.io/FemepBn.md.png" alt="screenshot 1" />
+          </div>
+          <div class="slider-slide">
+            <img src="https://iili.io/FemeDXt.md.png" alt="screenshot 2" />
+          </div>
+          <div class="slider-slide">
+            <img src="https://iili.io/Femey1s.md.png" alt="screenshot 3" />
+          </div>
+          <div class="slider-slide">
+            <img src="https://iili.io/Femkfh7.md.png" alt="screenshot 4" />
+          </div>
+          <div class="slider-slide">
+            <img src="https://iili.io/FemkMpp.md.png" alt="screenshot 5" />
+          </div>
+          <div class="slider-slide">
+            <img src="https://iili.io/FemkWTN.md.png" alt="screenshot 6" />
+          </div>
+        </div>
+      </div>
+      <button class="slider-btn slider-btn-prev">‹</button>
+      <button class="slider-btn slider-btn-next">›</button>
+    </div>
+
+    <div class="container">
+      <p style="font-size: 14px; color: #888" data-key="feedback-text"></p>
+
+      <h2 data-key="video-title"></h2>
+      <div class="shorts-grid">
+        <div class="short-item">
+          <iframe
+            src="https://www.youtube.com/embed/jGM53isFc-c"
+            title="YouTube video player"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+        <div class="short-item">
+          <iframe
+            src="https://www.youtube.com/embed/y3f8ccxfPKU"
+            title="YouTube video player"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
+
+      <p style="font-size: 18px; font-weight: bold" data-key="cta-question"></p>
+      <a
+        href="https://t.me/Idris_Hacker_bot"
+        class="button"
+        data-key="btn-join-now"
+      ></a>
+    </div>
+
+    <div id="lightbox" class="lightbox">
+      <span class="close-lightbox">×</span>
+      <img class="lightbox-content" id="lightbox-img" />
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- НОВЫЙ БЛОК: ЛОГИКА ПЕРЕВОДА ---
+        const translations = {
+          my: {
+            "header-title": "Anda ada 40 RM?",
+            "header-subtitle":
+              "Anda akan dapat bot secara percuma dan boleh mengeluarkan 2000 RM hari ini!",
+            "btn-join": "🚀 👉 Sertai Telegram",
+            "feedback-text": "* Maklum balas sebenar daripada pengguna *",
+            "video-title": "Tonton Bagaimana Bot Berfungsi",
+            "cta-question": "Siap sedia untuk mula menang?",
+            "btn-join-now": "👉 Sertai Sekarang – Bot Signal Telegram",
+          },
+          en: {
+            "header-title": "You have 40 RM?",
+            "header-subtitle":
+              "You will get bot for free and you can withdraw 2000 RM today!",
+            "btn-join": "🚀 👉 Join Telegram",
+            "feedback-text": "* Real feedback from users *",
+            "video-title": "Watch How The Bot Works",
+            "cta-question": "Ready to start winning?",
+            "btn-join-now": "👉 Join Now – Telegram Signal Bot",
+          },
+        };
+
+        const langButtons = document.querySelectorAll(".lang-btn");
+
+        const setLanguage = (lang) => {
+          document.querySelectorAll("[data-key]").forEach((element) => {
+            const key = element.getAttribute("data-key");
+            if (translations[lang] && translations[lang][key]) {
+              element.innerHTML = translations[lang][key];
+            }
+          });
+
+          // Обновляем активную кнопку
+          langButtons.forEach((btn) => {
+            btn.classList.toggle(
+              "active",
+              btn.getAttribute("data-lang") === lang
+            );
+          });
+
+          // Сохраняем выбор в localStorage
+          localStorage.setItem("language", lang);
+        };
+
+        langButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const lang = button.getAttribute("data-lang");
+            setLanguage(lang);
+          });
+        });
+
+        // При загрузке страницы проверяем сохраненный язык или ставим по умолчанию
+        const savedLang = localStorage.getItem("language") || "my"; // 'my' - малайский по умолчанию
+        setLanguage(savedLang);
+
+        // --- СТАРЫЙ КОД СЛАЙДЕРА И ЛАЙТБОКСА ---
+        const viewport = document.querySelector(".slider-viewport");
+        const track = document.querySelector(".slider-track");
+        const originalSlides = Array.from(track.children);
+        const nextButton = document.querySelector(".slider-btn-next");
+        const prevButton = document.querySelector(".slider-btn-prev");
+
+        let slides = [];
+        let slidesPerView = 1;
+        const slideCount = originalSlides.length;
+        let currentIndex = 0;
+        let autoplayInterval = null;
+        let slideWidthWithGap = 0;
+        let isSwiping = false,
+          startX = 0,
+          diffX = 0;
+
+        function setupSlider() {
+          stopAutoplay();
+          track.innerHTML = "";
+          originalSlides.forEach((slide) => track.appendChild(slide));
+          let currentSlides = Array.from(track.children);
+
+          track.prepend(
+            ...currentSlides.slice(-slideCount).map((s) => s.cloneNode(true))
+          );
+          track.append(
+            ...currentSlides.slice(0, slideCount).map((s) => s.cloneNode(true))
+          );
+
+          slides = Array.from(track.children);
+
+          const trackWidth = viewport.offsetWidth;
+          const gap = trackWidth * 0.01;
+          track.style.gap = `${gap}px`;
+          const totalGap = (slidesPerView - 1) * gap;
+          const slideWidth = (trackWidth - totalGap) / slidesPerView;
+
+          slides.forEach((slide) => {
+            slide.style.width = `${slideWidth}px`;
+          });
+
+          slideWidthWithGap = slideWidth + gap;
+          currentIndex = slideCount;
+          repositionTrack();
+          startAutoplay();
+        }
+
+        function updateSlidesPerView() {
+          const screenWidth = window.innerWidth;
+          if (screenWidth >= 1024) slidesPerView = 3;
+          else if (screenWidth >= 768) slidesPerView = 2;
+          else slidesPerView = 1;
+          setupSlider();
+        }
+
+        function repositionTrack() {
+          track.style.transition = "none";
+          const offset = -currentIndex * slideWidthWithGap;
+          track.style.transform = `translateX(${offset}px)`;
+          updateActiveSlides();
+        }
+
+        function changeSlide(direction) {
+          track.style.transition = "transform 0.5s ease";
+          currentIndex += direction;
+          const offset = -currentIndex * slideWidthWithGap;
+          track.style.transform = `translateX(${offset}px)`;
+          updateActiveSlides();
+        }
+
+        track.addEventListener("transitionend", () => {
+          if (currentIndex >= slideCount * 2) {
+            currentIndex = slideCount;
+            repositionTrack();
+          }
+          if (currentIndex < slideCount) {
+            currentIndex = slideCount * 2 - slidesPerView;
+            repositionTrack();
+          }
+          updateActiveSlides();
+        });
+
+        function updateActiveSlides() {
+          const centerIndex = Math.floor(slidesPerView / 2);
+          slides.forEach((slide, index) => {
+            slide.classList.remove("active-slide");
+            if (
+              index >= currentIndex + centerIndex &&
+              index < currentIndex + slidesPerView - centerIndex
+            ) {
+              slide.classList.add("active-slide");
+            }
+          });
+        }
+
+        function handleInteraction(action) {
+          stopAutoplay();
+          action();
+          setTimeout(startAutoplay, 5000);
+        }
+
+        nextButton.addEventListener("click", () =>
+          handleInteraction(() => changeSlide(1))
+        );
+        prevButton.addEventListener("click", () =>
+          handleInteraction(() => changeSlide(-1))
+        );
+
+        function startAutoplay() {
+          stopAutoplay();
+          autoplayInterval = setInterval(() => changeSlide(1), 3000);
+        }
+
+        function stopAutoplay() {
+          clearInterval(autoplayInterval);
+        }
+
+        function getPositionX(event) {
+          return event.touches ? event.touches[0].clientX : event.clientX;
+        }
+
+        function swipeStart(event) {
+          if (window.innerWidth >= 1024) return;
+          stopAutoplay();
+          isSwiping = true;
+          startX = getPositionX(event);
+          diffX = 0;
+          const transformMatrix = new DOMMatrix(
+            window.getComputedStyle(track).transform
+          );
+          track.style.transition = "none";
+          viewport.classList.add("is-swiping");
+        }
+
+        function swipeMove(event) {
+          if (!isSwiping) return;
+          const currentX = getPositionX(event);
+          diffX = currentX - startX;
+          const baseTransform = -currentIndex * slideWidthWithGap;
+          track.style.transform = `translateX(${baseTransform + diffX}px)`;
+        }
+
+        function swipeEnd(event) {
+          if (!isSwiping) return;
+          viewport.classList.remove("is-swiping");
+          setTimeout(startAutoplay, 5000);
+          if (Math.abs(diffX) > 50) {
+            changeSlide(diffX < 0 ? 1 : -1);
+          } else {
+            track.style.transition = "transform 0.5s ease";
+            repositionTrack();
+          }
+          setTimeout(() => {
+            isSwiping = false;
+          }, 50);
+        }
+
+        viewport.addEventListener("mousedown", swipeStart);
+        viewport.addEventListener("mousemove", swipeMove);
+        viewport.addEventListener("mouseup", swipeEnd);
+        viewport.addEventListener("mouseleave", swipeEnd);
+        viewport.addEventListener("touchstart", swipeStart);
+        viewport.addEventListener("touchmove", swipeMove);
+        viewport.addEventListener("touchend", swipeEnd);
+
+        window.addEventListener("resize", updateSlidesPerView);
+        updateSlidesPerView();
+      });
+
+      const lightbox = document.getElementById("lightbox");
+      const lightboxImg = document.getElementById("lightbox-img");
+      const closeBtn = document.querySelector(".close-lightbox");
+
+      document
+        .querySelector(".slider-track")
+        .addEventListener("click", (event) => {
+          const slide = event.target.closest(".slider-slide");
+          if (
+            document
+              .querySelector(".slider-viewport")
+              .classList.contains("is-swiping") ||
+            !slide
+          ) {
+            return;
+          }
+          const img = slide.querySelector("img");
+          if (img) {
+            openLightbox(img.src);
+          }
+        });
+
+      function openLightbox(src) {
+        lightboxImg.src = src;
+        lightbox.classList.add("active");
+        document.body.style.overflow = "hidden";
+        resetZoom();
+      }
+
+      let scale = 1,
+        lightboxDragging = false,
+        wasLightboxDragging = false;
+      let lightboxStartPos = { x: 0, y: 0 },
+        lightboxCurrentTranslate = { x: 0, y: 0 },
+        lightboxLastTranslate = { x: 0, y: 0 };
+
+      function applyTransform() {
+        lightboxImg.style.transform = `scale(${scale}) translate(${lightboxCurrentTranslate.x}px, ${lightboxCurrentTranslate.y}px)`;
+      }
+
+      function resetZoom() {
+        scale = 1;
+        lightboxDragging = false;
+        lightboxCurrentTranslate = { x: 0, y: 0 };
+        lightboxLastTranslate = { x: 0, y: 0 };
+        lightboxImg.style.transition = "transform 0.4s ease";
+        lightboxImg.style.transform = "scale(1) translate(0, 0)";
+        lightboxImg.classList.remove("is-zoomed", "is-dragging");
+      }
+
+      function closeLightbox() {
+        lightbox.classList.remove("active");
+        document.body.style.overflow = "";
+        setTimeout(resetZoom, 400);
+      }
+
+      closeBtn.addEventListener("click", closeLightbox);
+      lightbox.addEventListener("click", (e) => {
+        if (e.target === lightbox) closeLightbox();
+      });
+
+      lightboxImg.addEventListener("click", () => {
+        if (wasLightboxDragging) {
+          wasLightboxDragging = false;
+          return;
+        }
+        if (scale > 1) {
+          resetZoom();
+        } else {
+          scale = 2;
+          lightboxImg.classList.add("is-zoomed");
+          applyTransform();
+        }
+      });
+
+      lightboxImg.addEventListener("mousedown", (e) => {
+        if (scale > 1) {
+          e.preventDefault();
+          wasLightboxDragging = false;
+          lightboxDragging = true;
+          lightboxImg.style.transition = "none";
+          lightboxImg.classList.add("is-dragging");
+          lightboxStartPos = {
+            x: e.clientX - lightboxLastTranslate.x,
+            y: e.clientY - lightboxLastTranslate.y,
+          };
+        }
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (lightboxDragging) {
+          e.preventDefault();
+          wasLightboxDragging = true;
+          lightboxCurrentTranslate.x = e.clientX - lightboxStartPos.x;
+          lightboxCurrentTranslate.y = e.clientY - lightboxStartPos.y;
+          applyTransform();
+        }
+      });
+
+      window.addEventListener("mouseup", () => {
+        if (lightboxDragging) {
+          lightboxDragging = false;
+          lightboxImg.classList.remove("is-dragging");
+          lightboxLastTranslate = { ...lightboxCurrentTranslate };
+        }
+      });
+    </script>
+  </body>
+</html>
