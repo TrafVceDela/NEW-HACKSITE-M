@@ -31,7 +31,6 @@
         padding: 0 15px;
       }
 
-      /* --- СТИЛИ ДЛЯ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ --- */
       .lang-switcher {
         background-color: #000;
         padding: 8px 15px;
@@ -176,6 +175,7 @@
         flex-shrink: 0;
         box-sizing: border-box;
         aspect-ratio: 10 / 16;
+        transition: transform 0.5s ease, opacity 0.5s ease;
       }
       .slider-slide:not(.active-slide) {
         transform: scale(0.9);
@@ -320,14 +320,6 @@
       </div>
     </header>
 
-    <div class="container">
-      <a
-        href="https://t.me/Idris_Hacker_bot"
-        class="button"
-        data-key="btn-join"
-      ></a>
-    </div>
-
     <div class="slider-wrapper">
       <div class="slider-viewport">
         <div class="slider-track">
@@ -353,6 +345,14 @@
       </div>
       <button class="slider-btn slider-btn-prev">‹</button>
       <button class="slider-btn slider-btn-next">›</button>
+    </div>
+
+    <div class="container">
+      <a
+        href="https://t.me/Idris_Hacker_bot"
+        class="button"
+        data-key="btn-join"
+      ></a>
     </div>
 
     <div class="container">
@@ -394,8 +394,23 @@
     </div>
 
     <script>
+      // --- ИСПРАВЛЕННЫЙ JAVASCRIPT ---
       document.addEventListener("DOMContentLoaded", () => {
-        // --- НОВЫЙ БЛОК: ЛОГИКА ПЕРЕВОДА ---
+        // --- ОБЛАСТЬ ВИДИМОСТИ ДЛЯ ВСЕХ ПЕРЕМЕННЫХ ---
+        let slides = [];
+        let slidesPerView = 1;
+        const originalSlides = Array.from(
+          document.querySelector(".slider-track").children
+        );
+        const slideCount = originalSlides.length;
+        let currentIndex = 0;
+        let autoplayInterval = null;
+        let slideWidthWithGap = 0;
+        let isSwiping = false,
+          startX = 0,
+          diffX = 0;
+
+        // --- ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ЯЗЫКА ---
         const translations = {
           my: {
             "header-title": "Anda ada 40 RM?",
@@ -418,56 +433,32 @@
             "btn-join-now": "👉 Join Now – Telegram Signal Bot",
           },
         };
-
         const langButtons = document.querySelectorAll(".lang-btn");
-
         const setLanguage = (lang) => {
-          document.querySelectorAll("[data-key]").forEach((element) => {
-            const key = element.getAttribute("data-key");
-            if (translations[lang] && translations[lang][key]) {
-              element.innerHTML = translations[lang][key];
-            }
+          document.querySelectorAll("[data-key]").forEach((el) => {
+            const key = el.getAttribute("data-key");
+            if (translations[lang]?.[key])
+              el.innerHTML = translations[lang][key];
           });
-
-          // Обновляем активную кнопку
-          langButtons.forEach((btn) => {
+          langButtons.forEach((btn) =>
             btn.classList.toggle(
               "active",
               btn.getAttribute("data-lang") === lang
-            );
-          });
-
-          // Сохраняем выбор в localStorage
+            )
+          );
           localStorage.setItem("language", lang);
         };
+        langButtons.forEach((button) =>
+          button.addEventListener("click", () =>
+            setLanguage(button.getAttribute("data-lang"))
+          )
+        );
 
-        langButtons.forEach((button) => {
-          button.addEventListener("click", () => {
-            const lang = button.getAttribute("data-lang");
-            setLanguage(lang);
-          });
-        });
-
-        // При загрузке страницы проверяем сохраненный язык или ставим по умолчанию
-        const savedLang = localStorage.getItem("language") || "my"; // 'my' - малайский по умолчанию
-        setLanguage(savedLang);
-
-        // --- СТАРЫЙ КОД СЛАЙДЕРА И ЛАЙТБОКСА ---
+        // --- ЛОГИКА СЛАЙДЕРА ---
         const viewport = document.querySelector(".slider-viewport");
         const track = document.querySelector(".slider-track");
-        const originalSlides = Array.from(track.children);
         const nextButton = document.querySelector(".slider-btn-next");
         const prevButton = document.querySelector(".slider-btn-prev");
-
-        let slides = [];
-        let slidesPerView = 1;
-        const slideCount = originalSlides.length;
-        let currentIndex = 0;
-        let autoplayInterval = null;
-        let slideWidthWithGap = 0;
-        let isSwiping = false,
-          startX = 0,
-          diffX = 0;
 
         function setupSlider() {
           stopAutoplay();
@@ -481,7 +472,6 @@
           track.append(
             ...currentSlides.slice(0, slideCount).map((s) => s.cloneNode(true))
           );
-
           slides = Array.from(track.children);
 
           const trackWidth = viewport.offsetWidth;
@@ -489,10 +479,7 @@
           track.style.gap = `${gap}px`;
           const totalGap = (slidesPerView - 1) * gap;
           const slideWidth = (trackWidth - totalGap) / slidesPerView;
-
-          slides.forEach((slide) => {
-            slide.style.width = `${slideWidth}px`;
-          });
+          slides.forEach((slide) => (slide.style.width = `${slideWidth}px`));
 
           slideWidthWithGap = slideWidth + gap;
           currentIndex = slideCount;
@@ -583,21 +570,24 @@
           const transformMatrix = new DOMMatrix(
             window.getComputedStyle(track).transform
           );
+          const initialTranslate = transformMatrix.m41;
           track.style.transition = "none";
           viewport.classList.add("is-swiping");
+
+          swipeMove.initialTranslate = initialTranslate; // Сохраняем для swipeMove
         }
 
         function swipeMove(event) {
           if (!isSwiping) return;
           const currentX = getPositionX(event);
           diffX = currentX - startX;
-          const baseTransform = -currentIndex * slideWidthWithGap;
-          track.style.transform = `translateX(${baseTransform + diffX}px)`;
+          track.style.transform = `translateX(${
+            swipeMove.initialTranslate + diffX
+          }px)`;
         }
 
-        function swipeEnd(event) {
+        function swipeEnd() {
           if (!isSwiping) return;
-          viewport.classList.remove("is-swiping");
           setTimeout(startAutoplay, 5000);
           if (Math.abs(diffX) > 50) {
             changeSlide(diffX < 0 ? 1 : -1);
@@ -605,9 +595,8 @@
             track.style.transition = "transform 0.5s ease";
             repositionTrack();
           }
-          setTimeout(() => {
-            isSwiping = false;
-          }, 50);
+          isSwiping = false;
+          viewport.classList.remove("is-swiping");
         }
 
         viewport.addEventListener("mousedown", swipeStart);
@@ -619,9 +608,14 @@
         viewport.addEventListener("touchend", swipeEnd);
 
         window.addEventListener("resize", updateSlidesPerView);
+
+        // Инициализация языка и слайдера
+        const savedLang = localStorage.getItem("language") || "my";
+        setLanguage(savedLang);
         updateSlidesPerView();
       });
 
+      // --- ЛОГИКА ЛАЙТБОКСА ---
       const lightbox = document.getElementById("lightbox");
       const lightboxImg = document.getElementById("lightbox-img");
       const closeBtn = document.querySelector(".close-lightbox");
@@ -629,19 +623,13 @@
       document
         .querySelector(".slider-track")
         .addEventListener("click", (event) => {
+          const isSwiping = document
+            .querySelector(".slider-viewport")
+            .classList.contains("is-swiping");
           const slide = event.target.closest(".slider-slide");
-          if (
-            document
-              .querySelector(".slider-viewport")
-              .classList.contains("is-swiping") ||
-            !slide
-          ) {
-            return;
-          }
+          if (isSwiping || !slide) return;
           const img = slide.querySelector("img");
-          if (img) {
-            openLightbox(img.src);
-          }
+          if (img) openLightbox(img.src);
         });
 
       function openLightbox(src) {
@@ -688,9 +676,8 @@
           wasLightboxDragging = false;
           return;
         }
-        if (scale > 1) {
-          resetZoom();
-        } else {
+        if (scale > 1) resetZoom();
+        else {
           scale = 2;
           lightboxImg.classList.add("is-zoomed");
           applyTransform();
